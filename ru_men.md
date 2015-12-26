@@ -55,3 +55,16 @@
 
 ##7. 后向引用
 
+匹配重复单词
+
+```javascript
+\b(w+)\b\s+\1\b //组名为1
+```
+
+自定义组名`(?<Word\w+>)`. or `(?'Word'\w+)`
+
+反向引用这个分组
+
+```javascript
+\b(?<Word>\w+)\b\s+\k<Word>\b
+```
