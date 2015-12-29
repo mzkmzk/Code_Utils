@@ -24,3 +24,5 @@ git@***.net's password:
 404-K:*** maizhikun$ git push origin master
 fatal: protocol error: bad line length character: No s
 ```
+
+配置好ssh就行
