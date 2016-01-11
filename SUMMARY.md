@@ -4,7 +4,7 @@
 * [正则表达式](zheng_ze_biao_da_shi.md)
    * [入门](ru_men.md)
 * [前端](qian_duan.md)
-   * Chrome断点调试
+   * [Chrome断点调试](chromeduan_dian_diao_shi.md)
 * [Git](git.md)
    * [日常](ri_chang.md)
 * [Linux](linux.md)
