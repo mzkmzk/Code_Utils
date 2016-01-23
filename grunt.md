@@ -2,16 +2,17 @@
 
 作用: 压缩 编译 单元测试 linting > 自动化
 
-##1. 起步
+##1. 基础
+###1.1 起步
 
 1. 先确认下npm为最新版本`sudo npm update -g npm`
 2. 安装Grunt命令行(CLI)到全局环境`npm install -g grunt-cli`
 
-##2. CLI如何工作的
+###1.2 CLI如何工作的
 
 运行`grunt`,利用node提供的`require()`找到系统安装的Grunt,然后加载,然后传递`Gruntfile`文件的信息,源代码<https://github.com/gruntjs/grunt-cli/blob/master/bin/grunt>
 
-##3. 找个案例实践下
+###1.3 找个案例实践下
 
 笔者下载了jQuery<https://github.com/jquery/jquery/tree/2.2-stable>
 
@@ -19,3 +20,4 @@
 2. `npm install`安装项目依赖库
 3. `grunt` / `grunt --help`命令
 
+###1.4 自己动手
