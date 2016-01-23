@@ -9,5 +9,5 @@
 
 ##2. CLI如何工作的
 
-运行`grunt`,利用node提供的`require()`找到系统安装的Grunt,然后加载,然后传递`Gruntfile`文件的信息
+运行`grunt`,利用node提供的`require()`找到系统安装的Grunt,然后加载,然后传递`Gruntfile`文件的信息,源代码<https://github.com/gruntjs/grunt-cli/blob/master/bin/grunt>
 
