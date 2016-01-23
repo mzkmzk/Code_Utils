@@ -21,3 +21,23 @@
 3. `grunt` / `grunt --help`命令
 
 ###1.4 自己动手
+
+在项目根目录下 .创建
+
+1. package.json
+
+    内容为: 添加grunt开发环境
+    ```javascript
+    {
+      "name": "my-project-name",
+      "version": "0.1.0",
+      "devDependencies": {
+            "grunt": "~0.4.5",
+            "grunt-contrib-jshint": "~0.10.0",
+            "grunt-contrib-nodeunit": "~0.4.1",
+            "grunt-contrib-uglify": "~0.5.0"
+        }
+    }
+    ```
+
+2. Gruntfile.js
