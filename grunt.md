@@ -11,3 +11,7 @@
 
 运行`grunt`,利用node提供的`require()`找到系统安装的Grunt,然后加载,然后传递`Gruntfile`文件的信息,源代码<https://github.com/gruntjs/grunt-cli/blob/master/bin/grunt>
 
+##3. 找个现有的案例实践下
+
+笔者下载了jQuery<https://github.com/jquery/jquery/tree/2.2-stable>
+
