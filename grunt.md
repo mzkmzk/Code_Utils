@@ -15,3 +15,7 @@
 
 笔者下载了jQuery<https://github.com/jquery/jquery/tree/2.2-stable>
 
+1. cd到项目目录
+2. `npm install`安装项目依赖库
+3. `grunt` / `grunt --help`命令
+
