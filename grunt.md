@@ -39,5 +39,5 @@
         }
     }
     ```
-
+    补充说明<https://docs.npmjs.com/files/package.json>
 2. Gruntfile.js
