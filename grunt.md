@@ -39,5 +39,7 @@
         }
     }
     ```
+    
+    在pachage.json添加插件文件`npm install <module> --save-dev`
     补充说明<https://docs.npmjs.com/files/package.json>
 2. Gruntfile.js
