@@ -402,3 +402,163 @@ passwd : HapLab2015!
 
 基本的实体显示JS
 
+Base_Entity.js
+
+```javascript
+/**
+ *
+ * @param data_title {'entity_key':实体key,'entity_name':'实体中文显示'}
+ * @param attribute {实体表中的select选项}
+ * @constructor
+ */
+function Base_Entity(data_title,attribute){
+    Base_Entity.entity_key = data_title['entity_key'];
+    Base_Entity.entity_name = data_title['entity_name'];
+    Base_Entity.attribute = attribute;
+}
+
+/**
+ * 当加载List实体的时候调用该方法.
+ * @param data_attributes List中显示的实体属性
+ * @param operate_attributes List中操作显示的下级关联实体.
+ */
+Base_Entity.prototype.base_query_entities = function(data_attributes,operate_attributes){
+
+    var url_nav="../"+ Base_Entity.entity_key +"/"+Base_Entity.entity_key+"_List?";
+    var url  ="../Controller/"+Base_Entity.entity_key+"_Controller/query"+location.search;
+    $.get(url,function(result){
+        try{
+            //添加搜索链接
+            $("#search_form").attr('action',Base_Entity.entity_key+"_List");
+            //添加标题
+            //$("#base_title").append(Base_Entity.entity_name+'列表<a class="btn btn-info float-right text-center" href="../'+Base_Entity.entity_key+'/Add_'+Base_Entity.entity_key+'">添加'+Base_Entity.entity_name+'</a>');
+            $("#base_title").append(Base_Entity.entity_name+'列表<a class="btn btn-info float-right text-center" href="../Base/List_Add?model='+Base_Entity.entity_key+'">批量添加'+Base_Entity.entity_name+' </a>');
+            var result =JSON.parse(result);
+            if(result && (Number(result.total)>0)){
+
+                //设置分页
+                var record_num=Number(result.total);
+                $("#sum").html("共"+record_num+"条记录");
+                page_num = result.last_page;
+                var nav_obj=new PagePilot();
+                nav_obj.page_num=Number(page_num);
+                nav_obj.page    = result.current_page;
+                nav_obj.navPage = get_url_value("navPage");
+                nav_obj.lastNavPage_num=nav_obj.getLastNavPage_num();//添加属性：分页条最后一页的页面数目
+                nav_obj.navPage_num=Math.floor((nav_obj.page_num+nav_obj.navPageSize-1)/nav_obj.navPageSize);//添加属性，分页条总计的页数
+                nav_obj.createNavPage(url_nav);
+
+                //添加表头
+                for(var data_attribute in data_attributes){
+                    $("#base_thead").append("<th>"+data_attributes[data_attribute]+"</th>")
+                }
+                $("#base_thead").append("<th>操作</th>")
+
+                //加入数据需要转换
+                if(Base_Entity.prototype.data_change != undefined){
+                    result['data'] = Base_Entity.prototype.data_change(result['data']);
+                }
+
+                for(var i=0;i<result.data.length;i++){
+                    var html  = "<tr>";
+                        //显示数据
+                        for(var data_attribute in data_attributes){
+                            //用空字符串代替无效数据
+                           if(result.data[i][data_attribute] == undefined){
+                               result.data[i][data_attribute] ="";
+                           }else if (data_attribute.indexOf("_at")!=-1){
+                               if( result.data[i][data_attribute] == '0000-00-00 00:00:00'){
+                                   result.data[i][data_attribute] ="";
+                               }
+
+                           }
+
+                            html += "<td>"+result.data[i][data_attribute]+"</td>";
+                        }
+
+                        html += '<td>';
+                            //显示下级级联关系操作.
+                            for(var operate_attribute in operate_attributes){
+                                html += '<a class="btn btn-primary" href="../'+operate_attribute+'/Add_'+operate_attribute+'?'+Base_Entity.entity_key.toLowerCase()+'_ID='+result.data[i].id+'">新增'+operate_attributes[operate_attribute]+'</a>';
+                                html += '<a class="btn btn-primary" href="../'+operate_attribute+'/'+operate_attribute+'_List?'+Base_Entity.entity_key.toLowerCase()+'_ID='+result.data[i].id+'">全部'+operate_attributes[operate_attribute]+'</a>';
+                            }
+                            html +='<a class="btn btn-danger"  href="Add_'+Base_Entity.entity_key+'?id='+result.data[i].id+'">修改</a>';
+                        //判断应该显示删除/还原
+                        if(result.data[i].deleted_at < "2015" ){
+                            html+='<button class="btn btn-danger" name="delete[]" onclick="confirm_delete(\''+Base_Entity.entity_key+'\',\''+result.data[i].id+'\')">删除</button>';
+                        }else{
+                            html+='<button class="btn btn-danger" onclick="confirm_restore(\''+Base_Entity.entity_key+'\',\''+result.data[i].id+'\')">还原</button>';
+                        }
+                        html +='</td>';
+                    html+="</tr>";
+                    $("#base_list").append(html);
+                }
+            }else{
+                messenger_error("记录为空");
+            }
+        }catch(e){
+            messenger_error("解析错误，联系管理员");
+            messenger_error(e.message);
+        }
+    });
+}
+
+Base_Entity.prototype.base_query_entity = function(){
+    if(Base_Entity.prototype.data_install != undefined){
+        Base_Entity.prototype.data_install();
+    }
+    //设置新增url
+    Base_Entity.prototype.init_form_url();
+
+    //当操作为修改时,填充数据.
+    if(!(typeof(get_url_value("id"))=="undefined"||get_url_value("id")==null||get_url_value("id")=="")){
+        $("#title").html("修改"+Base_Entity.entity_name+"信息");
+        var url="../Controller/"+Base_Entity.entity_key+"_Controller/update?id="+get_url_value("id");
+        $("form").attr("action",url);
+        var result_result ;
+        $.ajaxSetup({
+            async : false
+        });
+        $.get("../Controller/"+Base_Entity.entity_key+"_Controller/query",{id:get_url_value("id")},function(result){
+            try{
+                var data = JSON.parse(trim(result));
+
+                result_result = data;
+                if (not_undefiend_null_empty(data)){
+                    for(var attribute in data.data[0]){
+                        //console.log(attribute +"  " + data.data[0][attribute])
+                        $("#"+attribute).val(data.data[0][attribute]);
+                    }
+                }else{
+                    messenger_error(Base_Entity.entity_name+"记录为空");
+                }
+
+                return result_result;
+            }catch(e){
+                messenger_error(e.message);
+                messenger_error("解析错误，联系管理员");
+            }
+        });
+        return result_result;
+    }
+}
+
+Base_Entity.prototype.init_form_url = function(){
+    var url=" ../Controller/"+Base_Entity.entity_key+"_Controller/insert";
+    $("form").attr("action",url);
+}
+
+/**
+ * 指定显示内容. 主要为了在填写杂交和上机时,填写姓名能查到上级关系
+ * @param name
+ */
+function set_blur_event(name,base_entity_key){
+    auto(name,"../Controller/"+base_entity_key+"_Controller/query_id_by_patientName");
+    /*$("input[name='"+name+"']").blur(function(){
+        var split_array = this.id.split('_');
+        var id = split_array[split_array.length-1];
+        $("#show_data_"+id).html(get_show_data_value(this.value));
+    });*/
+
+}
+```
