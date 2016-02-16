@@ -128,152 +128,141 @@ passwd : HapLab2015!
 	
 	`Base_Controller`: 所有需要CRUD的Controller,需要继承Base_Controller
 	
-	```
+	    class Base_Controller extends Controller{
 
-	class Base_Controller extends Controller{
+            //继承的Controller,必须在构造方法中,注入相对应的实体Model
+            protected  $model = null;
 
-    //继承的Controller,必须在构造方法中,注入相对应的实体Model
-    protected  $model = null;
+            public function base_query(Request $request){
 
-    public function base_query(Request $request){
-
-        //搜索名字,返回的$request 会带有`IDs`,表明符合病人名字匹配的当前实体ID.
-        //能根据病人名字搜索到的实体Model,都会有`get_IDs_by_patientName`方法,进行逐级递归查找
-        if(isset($request['patient_name'])){
-            $request = $this->model->get_IDs_by_patientName($request);
-        }
-
-        $model =  $this->model->query();
-
-        if(isset($request['IDs'])){
-            $model = $model->whereIn('id',$request['IDs']);
-        }
-
-
-        //获取实体属性,对where查询进行过滤非本实体的属性.
-        $attribute_one = get_model_attribute($this->model);
-        foreach($request->all() as $key => $value){
-            if (array_key_exists($key,$attribute_one) ==true){
-                $model = $model->where($key,$value);
+            //搜索名字,返回的$request 会带有`IDs`,表明符合病人名字匹配的当前实体ID.
+            //能根据病人名字搜索到的实体Model,都会有`get_IDs_by_patientName`方法,进行逐级递归查找
+            if(isset($request['patient_name'])){
+                $request = $this->model->get_IDs_by_patientName($request);
             }
+    
+            $model =  $this->model->query();
+    
+            if(isset($request['IDs'])){
+                $model = $model->whereIn('id',$request['IDs']);
+            }
+    
+            //获取实体属性,对where查询进行过滤非本实体的属性.
+            $attribute_one = get_model_attribute($this->model);
+            foreach($request->all() as $key => $value){
+                if (array_key_exists($key,$attribute_one) ==true){
+                    $model = $model->where($key,$value);
+                }
+            }
+    
+             $page_num = null;
+            if($request['page_size'] !=null){
+                $page_num = $request['page_size'];
+            }else {
+                $page_num = 20;
+            }
+    
+            $model = $model->orderBy("updated_at","desc")
+                ->Paginate($page_num)
+                ->toJson();
+    
+           return $model;
         }
-
-         $page_num = null;
-        if($request['page_size'] !=null){
-            $page_num = $request['page_size'];
-        }else {
-            $page_num = 20;
+    
+        protected function base_insert(Request $request){
+    
+            $result_data = array();
+    
+            $attribute_one = get_model_attribute($this->model);
+    
+            $request_all = $request->all();
+    
+            $array_length = object_all_array($request_all);
+    
+            //单个 else批量处理
+            if($array_length == 0){
+                foreach($request->all() as $key => $value){
+                    if (array_key_exists($key,$attribute_one) ==true){
+                        $this->model[$key] = $value;
+                    }
+                }
+                $result["result"] = $this->model->save();
+            }else {
+                for($index =0;$index<$array_length;$index++){
+                    $attribute = array();
+                    foreach($request_all as $key => $value){
+                        if (array_key_exists($key,$attribute_one) ==true){
+                            $this->model[$key] = $value[$index];
+                            $attribute[$key] = $value[$index];
+                        }
+                    }
+    
+                    $create_model = $this->model->create($attribute);
+                    array_push($result_data,$create_model);
+    
+                    $result["result"] = !is_null($create_model);
+                }
+            }
+            $result['data'] = $result_data;
+            return $result;
         }
-
-        $model = $model->orderBy("updated_at","desc")
-            ->Paginate($page_num)
-            ->toJson();
-
-       return $model;
-    }
-
-
-    protected function base_insert(Request $request){
-
-        $result_data = array();
-
-        $attribute_one = get_model_attribute($this->model);
-
-        $request_all = $request->all();
-
-        $array_length = object_all_array($request_all);
-
-        //单个 else批量处理
-        if($array_length == 0){
+    
+        public function base_update(Request $request){
+            //根据id,找到相应实体
+            $this->model = $this->model->find($request->get('id'));
+            //获取实体的属性,用来过滤非实体属性的更新
+            $attribute_one = get_model_attribute($this->model);
             foreach($request->all() as $key => $value){
                 if (array_key_exists($key,$attribute_one) ==true){
                     $this->model[$key] = $value;
                 }
             }
             $result["result"] = $this->model->save();
-        }else {
-            for($index =0;$index<$array_length;$index++){
-                $attribute = array();
-                foreach($request_all as $key => $value){
-                    if (array_key_exists($key,$attribute_one) ==true){
-                        $this->model[$key] = $value[$index];
-                        $attribute[$key] = $value[$index];
-                    }
-                }
-
-                $create_model = $this->model->create($attribute);
-                array_push($result_data,$create_model);
-
-                $result["result"] = !is_null($create_model);
-            }
+            return $result;
         }
-        $result['data'] = $result_data;
-        return $result;
-    }
-
-    public function base_update(Request $request){
-        //根据id,找到相应实体
-        $this->model = $this->model->find($request->get('id'));
-        //获取实体的属性,用来过滤非实体属性的更新
-        $attribute_one = get_model_attribute($this->model);
-        foreach($request->all() as $key => $value){
-            if (array_key_exists($key,$attribute_one) ==true){
-                $this->model[$key] = $value;
-            }
+    
+        public function base_delete(Request $request){
+            $result["result"] = $this->model
+                ->where("id",$request->get("id"))
+                ->delete();
+            return $result;
         }
-        $result["result"] = $this->model->save();
-        return $result;
-    }
-
-    public function base_delete(Request $request){
-        $result["result"] = $this->model
-            ->where("id",$request->get("id"))
-            ->delete();
-        return $result;
-    }
-
-    public function base_restore(Request $request){
-        $result["result"] = $this->model->withTrashed()
-            ->where("id",$request->get("id"))
-            ->restore();
-        return $result;
-    }
-
-    //默认执行的query
-    protected function query(Request $request){
-        return $this->base_query($request);
-    }
-
-    //默认执行的insert
-    protected function insert(Request $request){
-        return json_encode($this->base_insert($request));
-    }
-
-    //默认执行的update
-    public function update(Request $request){
-        return json_encode($this->base_update($request));
-    }
-
-    //默认执行的delete
-    public function delete(Request $request){
-        return json_encode($this->base_delete($request));
-    }
-
-    //默认执行的restore
-    public function restore(Request $request){
-        return json_encode($this->base_restore($request));
-    }
-
-	```	
-	
+    
+        public function base_restore(Request $request){
+            $result["result"] = $this->model->withTrashed()
+                ->where("id",$request->get("id"))
+                ->restore();
+            return $result;
+        }
+    
+        //默认执行的query
+        protected function query(Request $request){
+            return $this->base_query($request);
+        }
+    
+        //默认执行的insert
+        protected function insert(Request $request){
+            return json_encode($this->base_insert($request));
+        }
+    
+        //默认执行的update
+        public function update(Request $request){
+            return json_encode($this->base_update($request));
+        }
+    
+        //默认执行的delete
+        public function delete(Request $request){
+            return json_encode($this->base_delete($request));
+        }
+    
+        //默认执行的restore
+        public function restore(Request $request){
+            return json_encode($this->base_restore($request));
+        }
+    
 	eg: Sample_Controller:
 	
-						
-3. Model设置
-
-
-
-    class Sample_Controller extends Base_Controller{
+        class Sample_Controller extends Base_Controller{
 
         /**
          * 给Base_Controller注入Model
@@ -295,7 +284,6 @@ passwd : HapLab2015!
             }
             return json_encode($result);
         }
-    
     
         /**
          * 主要用于,批量增加数据时,在确定上级关系时,只需填写名字就会自动搜索匹配名字的上级.
@@ -327,3 +315,5 @@ passwd : HapLab2015!
                 }
             return $result;
         }
+        
+3. Model设置        
