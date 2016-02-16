@@ -317,3 +317,76 @@ passwd : HapLab2015!
         }
         
 3. Model设置        
+
+    举例Sample_Model
+    
+        class Sample_Model extends Base_Model{
+
+            protected $table = 'Samples';
+        
+            public $appends = ['patient_name'];
+        
+            public static $next_relationships = ['blood_dispose_records'];
+        
+            public function patient(){
+                return $this->belongsTo('App\Models\Patient_Model','patient_ID','id');
+            }
+        
+            public function blood_dispose_records(){
+                return $this->hasMany('App\Models\Blood_Dispose_Record_Model','sample_id','id');
+            }
+        
+            public function report(){
+                return $this->hasMany('App\Models\Report_Model','sample_id','id');
+            }
+        
+            public function getPatientNameAttribute(){
+                if($this->patient !=null){
+                    return $this->patient->name ;
+                }else {
+                    return "";
+                }
+            }
+            
+            public function get_IDs_by_patientName(Request $request){
+                $patient_model = new Patient_Model();
+                $request = $patient_model->get_IDs_by_patientName($request);
+                $sample_model = new Sample_Model();
+                $sample_model = $sample_model
+                    ->whereIn("patient_id",$request['IDs'])
+                    ->get(['id']);
+                //直接赋值给request会报错说request负载过重.
+                $IDs = array();
+                foreach($sample_model as $sample_model_one){
+                    array_push($IDs,$sample_model_one->id);
+                }
+                error_log(__CLASS__ . json_encode($IDs));
+                $request['IDs'] = $IDs;
+                return $request;
+            }
+        
+           /* public static function type_to_string($id){
+                if($id == 1){
+                    return '血液';
+                }else if($id ==2 ) {
+                    return '组织';
+                }
+        
+            }*/
+        
+            /**
+             * 判断有无下一操作.
+             * @param $blood_dispose_record_model
+             * @param $check_type
+             * @return bool|void
+             */
+            public static function query_has_next_operate($model,$check_type){
+                $next_model_array = $model->blood_dispose_records;
+                if(count($next_model_array) == 0){
+                    return "预处理没有记录";
+                }
+                return Blood_Dispose_Record_Model::query_has_operate($next_model_array,$check_type);
+        
+            }
+        }
+        
