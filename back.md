@@ -321,25 +321,33 @@ passwd : HapLab2015!
     举例Sample_Model
     
         class Sample_Model extends Base_Model{
-
+        
+            //数据库表名
             protected $table = 'Samples';
         
+            //的Model转换为json时,会增加属性patient_name => `会执行getPatientNameAttribute方法返回的结果`
             public $appends = ['patient_name'];
         
+            //指定下级的关系,现在主要用于数据导出时,根据model名找到下机级联的实体表,然而进行数据读取
+            // 数据读取的Controller App\Http\Controllers\Excel/All_Excel;
             public static $next_relationships = ['blood_dispose_records'];
         
+            //声明上级关系
             public function patient(){
                 return $this->belongsTo('App\Models\Patient_Model','patient_ID','id');
             }
         
+            //声明下级关系
             public function blood_dispose_records(){
                 return $this->hasMany('App\Models\Blood_Dispose_Record_Model','sample_id','id');
             }
         
+            //声明下级关系
             public function report(){
                 return $this->hasMany('App\Models\Report_Model','sample_id','id');
             }
         
+            //用于获取Model的时候,把病人名字也获取了
             public function getPatientNameAttribute(){
                 if($this->patient !=null){
                     return $this->patient->name ;
@@ -347,7 +355,13 @@ passwd : HapLab2015!
                     return "";
                 }
             }
-            
+        
+            /**
+             * 根据病人的姓名获取本实体中能匹配的ID
+             * 具体思路是调用上级Model的get_IDs_by_patientName方法,直接递归到Patient实体中,就能获取上级匹配的IDs,然后把上级匹配的IDs和本实体筛选
+             * @param Request $request
+             * @return Request
+             */
             public function get_IDs_by_patientName(Request $request){
                 $patient_model = new Patient_Model();
                 $request = $patient_model->get_IDs_by_patientName($request);
@@ -355,38 +369,39 @@ passwd : HapLab2015!
                 $sample_model = $sample_model
                     ->whereIn("patient_id",$request['IDs'])
                     ->get(['id']);
-                //直接赋值给request会报错说request负载过重.
-                $IDs = array();
-                foreach($sample_model as $sample_model_one){
-                    array_push($IDs,$sample_model_one->id);
+        
+                    $IDs = array();
+                    foreach($sample_model as $sample_model_one){
+                        array_push($IDs,$sample_model_one->id);
+                    }
+            
+                    $request['IDs'] = $IDs;
+                    return $request;
                 }
-                error_log(__CLASS__ . json_encode($IDs));
-                $request['IDs'] = $IDs;
-                return $request;
+            
+               /* public static function type_to_string($id){
+                    if($id == 1){
+                        return '血液';
+                    }else if($id ==2 ) {
+                        return '组织';
+                    }
+            
+                }*/
+            
+                /**
+                 * 判断有无下一操作.
+                 * 主要用在邮件提醒中.主要思路为在每个Model中设置判断有无下级数据
+                 * @param $blood_dispose_record_model
+                 * @param $check_type
+                 * @return bool|void
+                 */
+                public static function query_has_next_operate($model,$check_type){
+                    $next_model_array = $model->blood_dispose_records;
+                    if(count($next_model_array) == 0){
+                        return "预处理没有记录";
+                    }
+                    return Blood_Dispose_Record_Model::query_has_operate($next_model_array,$check_type);
+            
+                }
+            
             }
-        
-           /* public static function type_to_string($id){
-                if($id == 1){
-                    return '血液';
-                }else if($id ==2 ) {
-                    return '组织';
-                }
-        
-            }*/
-        
-            /**
-             * 判断有无下一操作.
-             * @param $blood_dispose_record_model
-             * @param $check_type
-             * @return bool|void
-             */
-            public static function query_has_next_operate($model,$check_type){
-                $next_model_array = $model->blood_dispose_records;
-                if(count($next_model_array) == 0){
-                    return "预处理没有记录";
-                }
-                return Blood_Dispose_Record_Model::query_has_operate($next_model_array,$check_type);
-        
-            }
-        }
-        
