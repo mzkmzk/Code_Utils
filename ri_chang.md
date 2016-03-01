@@ -14,7 +14,7 @@ git reset --hard origin/master
 git@***.net's password:
 ```
 
-拉代码时,只提示要输入密码,其实这个是要ssh进入服务器的密码,因为代码的ssh没配置号
+拉代码时,只提示要输入密码,其实这个是要ssh进入服务器的密码,因为代码的ssh没配置好
 
 ##3. `fatal: protocol error: bad line length character: No s`
 
