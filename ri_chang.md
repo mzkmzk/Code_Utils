@@ -26,3 +26,9 @@ fatal: protocol error: bad line length character: No s
 ```
 
 配置好ssh就行
+
+## 4. git clone 时想重命名
+
+git clone 时,默认为仓库的名字 要想重命名 砸破
+
+`git clone 地址 重命名称`
