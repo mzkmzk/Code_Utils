@@ -33,7 +33,7 @@ git clone 时,默认为仓库的名字 要想重命名 砸破
 
 `git clone 地址 重命名称`
 
-## 5. Permission denied (publickey).后常用的命名
+## 5. Permission denied (publickey).后常用的命令
 
 1. 查看当前有效的ssh : `ssh-add -l`
       
