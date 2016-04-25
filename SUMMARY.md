@@ -13,6 +13,4 @@
 * [GitBook](gitbook.md)
 * [First Chapter](chapter1.md)
 * [Back](back.md)
-* [Tools](tools.md)
-   * [Git自动提交](gitzi_dong_ti_jiao.md)
 
