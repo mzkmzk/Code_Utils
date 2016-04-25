@@ -14,4 +14,5 @@
 * [First Chapter](chapter1.md)
 * [Back](back.md)
 * [Tools](tools.md)
+   * Git自动提交
 
